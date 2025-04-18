@@ -7,6 +7,31 @@
 *	    Contents :
 */
 
+/*
+요구사항: 스케줄링 알고리즘에 따라 프로세스를 정확한 순서대로 스케줄링하고, 모든 작업정보를 정확히 기록하도록 구현.
+RR, FeedBack, Lottery, Stride
+스케줄러는 생성자를 통해 실행할 작업들이 저장된 job_queue/job_list와 context switch time을 전달받는다.
+스케줄러는 run()함수가 호출될 때마다, 다음 1초간 실행할 작업 명을 반환한다.
+스케줄러는 job구조체의 정보가 변경될 때마다, 이를 모두 update한다.
+스케줄러는 완료된 job을 "end-jobs"에 순서대로 저장(push-back)한다"
+
+입력(워크로드)
+프로세스 개수 (n):
+
+구현해야하는 내용:
+RR, FeedBack, Lottery, Stride 클래스를 구현한다
+각 클래스의 위쪽 두가지 함수의 선언은 수정할수없다
+생성자는 부모 생성자를 호출하고 name을 초기화해야한다-기존 내용을 수정하지 말것
+각 클래스의 멤버변수와 함수는 자유롭게 추가 가능
+라이브러리는 c++ STL만 사용가능
+sched.cpp 외의 다른 파일은 제출하지 않음
+RR과 FeedBack은 time quantum이 다르더라도 동일한 class로 작성한다 
+(+ 피드백은 두개의 버전으로 돌아가게 되어있는데 클래스 하나로 두개 다 돌아가게 만들어야한다)
+생성자를 통해 time quantum을 전달받는다
+FeedBack의 큐 개수는 4개이며, boosting 정책은 없다
+
+line by line으로 코드 설명하는 주석 달것
+*/
 #include <string>
 #include <stdio.h>
 #include <iostream>
@@ -16,13 +41,18 @@
 #include <unordered_map>
 #include "sched.h"
 
-class RR : public Scheduler{
+class RR : public Scheduler{    // Round Robin 스케줄러
     private:
-        int time_slice_;
-        int left_slice_;
-        std::queue<Job> waiting_queue;
+        int time_slice_;    // time quantum
+        int left_slice_;    // 남은 ?? 
+        std::queue<Job> waiting_queue;  // 대기 큐
 
     public:
+        //TEST_P에서 생성자 호출하면 아래 생성자가 호출된다. 
+        //자식생성자가 부모생성자인 Scheduler의 생성자를 호출한다.
+        //결과적으로 job_queue_와 switch_time_, time_slice가 초기화된다.
+        //time slice는 1인 버전과, 4인 버전이 있다.  
+        
         RR(std::queue<Job> jobs, double switch_overhead, int time_slice) : Scheduler(jobs, switch_overhead) {
             name = "RR_"+std::to_string(time_slice);
             /*

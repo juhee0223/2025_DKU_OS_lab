@@ -13,21 +13,22 @@
 
 // TEST_P 실행 전, 실행 됨
 void SchedulerTest::SetUp() {
-  load_batch_workload();
-  load_streaming_workload();
+  load_batch_workload();  //lottery, stride용
+  load_streaming_workload();  //RR, MLFQ용.
 }
 
 // TEST_P 실행 후, 실행 됨
 void SchedulerTest::TearDown() {
-  run_sched(sched_);
-  print_order();
-  print_stat();
-  check_answer(sched_->get_name(), "completion");
+  run_sched(sched_); //핵심 수행 함수.
+  print_order(); //시각화
+  print_stat(); //통계 출력
+  check_answer(sched_->get_name(), "completion"); //정답과 확인해서 채점하는 함수
   check_answer(sched_->get_name(), "order");
   delete sched_;  
 }
 
-// 스케줄러 실행함수
+// 스케줄러 실행함수 (중요!)
+// 스케줄러를 실행하고, 모든 작업이 완료될 때까지 run()을 반복함
 void SchedulerTest::run_sched (Scheduler* sched_){
   int current_job = 0;
   
@@ -36,7 +37,7 @@ void SchedulerTest::run_sched (Scheduler* sched_){
   do {
     current_job = sched_->run();
     // 스케줄링 작업 저장
-    sched_log_.push_back(current_job);
+    sched_log_.push_back(current_job);  //시각화용 로그 기록.
   } while(current_job != -1);
   
   // 스케줄링 작업 정보 저장
@@ -44,7 +45,7 @@ void SchedulerTest::run_sched (Scheduler* sched_){
   return;
 }
 
-void SchedulerTest::load_streaming_workload() {
+void SchedulerTest::load_streaming_workload() { //파일을 열고, job을 읽어서
     std::string file_name = "./data/streaming_workload_" + workload_name_ + ".csv";
     std::ifstream file(file_name);
     std::string line;
@@ -74,12 +75,12 @@ void SchedulerTest::load_streaming_workload() {
         job.service_time = std::stoi(cell);
         job.remain_time = std::stoi(cell);
 
-        job_queue_.push(job);
+        job_queue_.push(job); //job_queue에 job을 추가한다.
     }
     return;
 }
 
-void SchedulerTest::load_batch_workload() {
+void SchedulerTest::load_batch_workload() { //파일을 열고, job을 읽어서
     std::string file_name = "./data/batch_workload_" + workload_name_ + ".csv";
     std::ifstream file(file_name);
     std::string line;
@@ -94,7 +95,8 @@ void SchedulerTest::load_batch_workload() {
     while (std::getline(file, line)) {
         std::stringstream linestream(line);
         std::string cell;
-        Job job;
+        //Job에는 name, arrival_time, service_time, remain_time, first_run_time, completion_time, tickets가 있다.
+        Job job; 
 
         std::getline(linestream, cell, ',');
         job.name = std::stoi(cell);
@@ -107,7 +109,7 @@ void SchedulerTest::load_batch_workload() {
         job.remain_time = std::stoi(cell);
         
 
-        job_list_.push_back(job);
+        job_list_.push_back(job); //job_list에 job을 추가한다. 
     }
     return;
 }

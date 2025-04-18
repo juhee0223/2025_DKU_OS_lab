@@ -11,6 +11,7 @@ TEST_P(SchedulerTest, FCFS) {
 
 TEST_P(SchedulerTest, RR_1) {
   sched_ = new RR(job_queue_, switch_time_, /*time slice*/ 1);
+  //이렇게 하면, RR클래스의 생성자가 호출된다. 
 }
 
 TEST_P(SchedulerTest, RR_4) {
@@ -46,6 +47,11 @@ INSTANTIATE_TEST_CASE_P(Default, SchedulerTest,
 );
 
 int main() {
-    ::testing::InitGoogleTest();
-    return RUN_ALL_TESTS();
+    ::testing::InitGoogleTest(); //테스트 환경 초기화
+
+    //내부적으로 SchedulerTest::SetUp()이 실행되고,
+    //각각의 TEST_P가 실행된다. -> INSTANTIATE_TEST_CASE_P에서 정의한 모든 경우에 대해 실행된다.
+    //마지막으로 SchedulerTest::TearDown()이 실행된다.
+    return RUN_ALL_TESTS(); 
+    
 }

@@ -9,7 +9,7 @@
 #ifndef SCHD_H
 #define SCHD_H
 
-struct Job{
+struct Job{ //Job에는 name, arrival_time, service_time, remain_time, first_run_time, completion_time, tickets가 있다.
     int name = 0; // 작업 이름
     int arrival_time = 0; // 작업 도착 시간
     int service_time = 0; // 작업 소요(= burst) 시간
@@ -24,23 +24,30 @@ class Scheduler {
     protected:
         // 스케줄러 이름
         std::string name;
+
         // workload 작업들이 이름 순으로 정렬된 큐
         std::queue<Job> job_queue_; 
+
         // workload 작업들이 이름 순으로 정렬된 list
         std::list<Job> job_list_;
+
         // 작업이 종료된 job을 저장하는 vector
         std::vector<Job> end_jobs_; 
+
         // context_switch 시간 (= 기존 작업 저장 + 새로운 작업 불러오는 시간)
         // switch time은 스케줄링 순서에도 영향을 미치니, 주의해야 함
         double switch_time_; 
+
         // 현재 시간 = 기존 총 작업 실행 시간 + 기존 총 문맥 교환 시간
         // arrival_time, waiting_time 또한 이를 기준으로 함. 
         double current_time_ = 0;
+
         // 현재 작업 (처음에는 존재하지 않는 job(name=0)으로 초기화되어 있음)
         Job current_job_;
 
     public:
         Scheduler() = default;
+
         /*
         (1) 생성자 함수
         - 스케줄링 전, 초기화 및 전처리를 담당하는 함수
@@ -57,6 +64,7 @@ class Scheduler {
             : job_list_(jobs), switch_time_(switch_overhead) {
                 name = "Default";
         }
+
         /*
         (2) 스케줄링 함수
         - run() 함수는 다음 1초 동안 실행할 작업의 이름을 반환함
