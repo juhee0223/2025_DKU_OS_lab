@@ -1,9 +1,9 @@
 /*
 *	DKU Operating System Lab
 *	    Lab1 (Scheduler Algorithm Simulator)
-*	    Student id : 
-*	    Student name : 
-*	    Date : 
+*	    Student id : 32221902
+*	    Student name : 박주희
+*	    Date : 2025.04.22
 *	    Contents :
 */
 
