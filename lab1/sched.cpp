@@ -7,31 +7,6 @@
 *	    Contents :
 */
 
-/*
-요구사항: 스케줄링 알고리즘에 따라 프로세스를 정확한 순서대로 스케줄링하고, 모든 작업정보를 정확히 기록하도록 구현.
-RR, FeedBack, Lottery, Stride
-스케줄러는 생성자를 통해 실행할 작업들이 저장된 job_queue/job_list와 context switch time을 전달받는다.
-스케줄러는 run()함수가 호출될 때마다, 다음 1초간 실행할 작업 명을 반환한다.
-스케줄러는 job구조체의 정보가 변경될 때마다, 이를 모두 update한다.
-스케줄러는 완료된 job을 "end-jobs"에 순서대로 저장(push-back)한다"
-
-입력(워크로드)
-프로세스 개수 (n):
-
-구현해야하는 내용:
-RR, FeedBack, Lottery, Stride 클래스를 구현한다
-각 클래스의 위쪽 두가지 함수의 선언은 수정할수없다
-생성자는 부모 생성자를 호출하고 name을 초기화해야한다-기존 내용을 수정하지 말것
-각 클래스의 멤버변수와 함수는 자유롭게 추가 가능
-라이브러리는 c++ STL만 사용가능
-sched.cpp 외의 다른 파일은 제출하지 않음
-RR과 FeedBack은 time quantum이 다르더라도 동일한 class로 작성한다 
-(+ 피드백은 두개의 버전으로 돌아가게 되어있는데 클래스 하나로 두개 다 돌아가게 만들어야한다)
-생성자를 통해 time quantum을 전달받는다
-FeedBack의 큐 개수는 4개이며, boosting 정책은 없다
-
-line by line으로 코드 설명하는 주석 달것
-*/
 #include <string>
 #include <stdio.h>
 #include <iostream>
@@ -41,115 +16,169 @@ line by line으로 코드 설명하는 주석 달것
 #include <unordered_map>
 #include "sched.h"
 
-class RR : public Scheduler{    // Round Robin 스케줄러
-    private:
-        int time_slice_;    // time quantum
-        int left_slice_;    // 남은 ?? 
-        std::queue<Job> waiting_queue;  // 대기 큐
+const int INT_MAX = 2147483647; 
 
-    public:
-        //TEST_P에서 생성자 호출하면 아래 생성자가 호출된다. 
-        //자식생성자가 부모생성자인 Scheduler의 생성자를 호출한다.
-        //결과적으로 job_queue_와 switch_time_, time_slice가 초기화된다.
-        //time slice는 1인 버전과, 4인 버전이 있다.  
-        
-        RR(std::queue<Job> jobs, double switch_overhead, int time_slice) : Scheduler(jobs, switch_overhead) {
-            name = "RR_"+std::to_string(time_slice);
-            /*
-            * 위 생성자 선언 및 이름 초기화 코드 수정하지 말것.
-            * 나머지는 자유롭게 수정 및 작성 가능 (아래 코드 수정 및 삭제 가능)
-            */
-            time_slice_ = time_slice; 
-            left_slice_ = time_slice;
-        }
-
-        int run() override {
-            return current_job_.name;
-        }
-                
-};
-
-class FeedBack : public Scheduler {
+// =======================================================
+// 1) Round Robin 스케줄러
+//    - 고정된 time quantum으로 선점하며 순환
+// =======================================================
+class RR : public Scheduler
+{
 private:
-    std::queue<Job> queue[4]; // 각 요소가 하나의 큐인 배열 선언
-    int quantum[4] = {1, 1, 1, 1};
-    int left_slice_;
-    int current_queue;
+    int time_slice_;                 // 타임 퀀텀
+    int left_slice_;                 // 현재 작업에 남은 퀀텀
+    std::queue<Job> waiting_queue;   // 대기 큐
 
 public:
-    FeedBack(std::queue<Job> jobs, double switch_overhead, bool is_2i) : Scheduler(jobs, switch_overhead) {
-        if (is_2i) {
-            name = "FeedBack_2i";
-        } else {
-            name = "FeedBack_1";
-        }
+    RR(std::queue<Job> jobs, double switch_overhead, int time_slice)
+        : Scheduler(jobs, switch_overhead)
+    {
+        name = "RR_" + std::to_string(time_slice);
         /*
-        * 위 생성자 선언 및 이름 초기화 코드 수정하지 말것.
-        * 나머지는 자유롭게 수정 및 작성 가능
-        */
-        // Queue별 time quantum 설정
-        if (name == "FeedBack_2i") {
-            quantum[0] = 1;
-            quantum[1] = 2;
-            quantum[2] = 4;
-            quantum[3] = 8;
-        }
+         * 위 생성자 선언 및 이름 초기화 코드 수정하지 말것.
+         * 나머지는 자유롭게 수정 및 작성 가능 (아래 코드 수정 및 삭제 가능)
+         */
+        time_slice_ = time_slice;
+        left_slice_ = time_slice;
     }
 
-    int run() override {
+    int run() override
+    {
+        // [1] 처음 실행 시: current_job_이 비어 있고 job_queue에 작업이 있다면 하나 할당
+        if (current_job_.name == 0 && !job_queue_.empty()) {
+            current_job_ = job_queue_.front();
+            job_queue_.pop();
+        }
+
+        // [2] 도착한 작업을 waiting_queue로 이동 (하나씩만 이동)
+        if (!job_queue_.empty() &&
+            job_queue_.front().arrival_time <= current_time_) {
+            waiting_queue.push(job_queue_.front());
+            job_queue_.pop();
+        }
+
+        // [3] 작업 완료 시: 완료 시간 기록, end_jobs_에 저장
+        if (current_job_.remain_time == 0) {
+            current_job_.completion_time = current_time_;
+            end_jobs_.push_back(current_job_);
+            left_slice_ = time_slice_;  // 다음 작업 대비 초기화
+
+            // 대기 큐가 비어 있으면 더 이상 실행할 작업 없음
+            if (waiting_queue.empty()) return -1;
+
+            // 다음 작업 할당 및 context switch 반영
+            current_job_ = waiting_queue.front();
+            waiting_queue.pop();
+            current_time_ += switch_time_;
+        }
+
+        // [4] time quantum 소진 시: 현재 작업 선점 → 대기열로, 다음 작업 할당
+        if (left_slice_ == 0) {
+            if (!waiting_queue.empty()) {
+                waiting_queue.push(current_job_);
+                current_job_ = waiting_queue.front();
+                waiting_queue.pop();
+                current_time_ += switch_time_;
+            }
+            left_slice_ = time_slice_;
+        }
+
+        // [5] 첫 실행인 경우, first_run_time 기록
+        if (current_job_.service_time == current_job_.remain_time) {
+            current_job_.first_run_time = current_time_;
+        }
+
+        // [6] 시간 1초 흐름 반영
+        left_slice_--;
+        current_time_++;
+        current_job_.remain_time--;
+
+        // [7] 현재 실행 중인 작업의 이름 반환
         return current_job_.name;
     }
 };
 
-class Lottery : public Scheduler{
+class FeedBack : public Scheduler {
     private:
-        int counter = 0;
-        int total_tickets = 0;
-        int winner = 0;
-        std::mt19937 gen;  // 난수 생성기
-        
+        std::queue<Job> queue[4]; // 각 요소가 하나의 큐인 배열 선언
+        int quantum[4] = {1, 1, 1, 1};
+        int left_slice_;
+        int current_queue;
+    
     public:
-        Lottery(std::list<Job> jobs, double switch_overhead) : Scheduler(jobs, switch_overhead) {
-            name = "Lottery";
-            // 난수 생성기 초기화
-            uint seed = 10; // seed 값 수정 금지
-            gen = std::mt19937(seed);
-            total_tickets = 0;
-            for (const auto& job : job_list_) {
-                total_tickets += job.tickets;
+        FeedBack(std::queue<Job> jobs, double switch_overhead, bool is_2i) : Scheduler(jobs, switch_overhead) {
+            if (is_2i) {
+                name = "FeedBack_2i";
+            } else {
+                name = "FeedBack_1";
+            }
+            /*
+            * 위 생성자 선언 및 이름 초기화 코드 수정하지 말것.
+            * 나머지는 자유롭게 수정 및 작성 가능
+            */
+            // Queue별 time quantum 설정
+            if (name == "FeedBack_2i") {
+                quantum[0] = 1;
+                quantum[1] = 2;
+                quantum[2] = 4;
+                quantum[3] = 8;
             }
         }
-
-        int getRandomNumber(int min, int max) {
-            std::uniform_int_distribution<int> dist(min, max);
-            return dist(gen);
-        }
-
+    
         int run() override {
             return current_job_.name;
         }
-};
-
-
-class Stride : public Scheduler{
-    private:
-        // 각 작업의 현재 pass 값과 stride 값을 관리하는 맵
-        std::unordered_map<int, int> pass_map;  
-        std::unordered_map<int, int> stride_map;  
-        const int BIG_NUMBER = 10000; // stride 계산을 위한 상수 (보통 큰 수를 사용)
-
-    public:
-        Stride(std::list<Job> jobs, double switch_overhead) : Scheduler(jobs, switch_overhead) {
-            name = "Stride";
-                    // job_list_에 있는 각 작업에 대해 stride와 초기 pass 값(0)을 설정
-            for (auto &job : job_list_) {
-                // stride = BIG_NUMBER / tickets (tickets는 0이 아님을 가정)
-                stride_map[job.name] = BIG_NUMBER / job.tickets;
-                pass_map[job.name] = 0;
+    };
+    
+    class Lottery : public Scheduler{
+        private:
+            int counter = 0;
+            int total_tickets = 0;
+            int winner = 0;
+            std::mt19937 gen;  // 난수 생성기
+            
+        public:
+            Lottery(std::list<Job> jobs, double switch_overhead) : Scheduler(jobs, switch_overhead) {
+                name = "Lottery";
+                // 난수 생성기 초기화
+                uint seed = 10; // seed 값 수정 금지
+                gen = std::mt19937(seed);
+                total_tickets = 0;
+                for (const auto& job : job_list_) {
+                    total_tickets += job.tickets;
+                }
             }
-        }
-
-        int run() override {
-            return current_job_.name;
-        }
-};
+    
+            int getRandomNumber(int min, int max) {
+                std::uniform_int_distribution<int> dist(min, max);
+                return dist(gen);
+            }
+    
+            int run() override {
+                return current_job_.name;
+            }
+    };
+    
+    
+    class Stride : public Scheduler{
+        private:
+            // 각 작업의 현재 pass 값과 stride 값을 관리하는 맵
+            std::unordered_map<int, int> pass_map;  
+            std::unordered_map<int, int> stride_map;  
+            const int BIG_NUMBER = 10000; // stride 계산을 위한 상수 (보통 큰 수를 사용)
+    
+        public:
+            Stride(std::list<Job> jobs, double switch_overhead) : Scheduler(jobs, switch_overhead) {
+                name = "Stride";
+                        // job_list_에 있는 각 작업에 대해 stride와 초기 pass 값(0)을 설정
+                for (auto &job : job_list_) {
+                    // stride = BIG_NUMBER / tickets (tickets는 0이 아님을 가정)
+                    stride_map[job.name] = BIG_NUMBER / job.tickets;
+                    pass_map[job.name] = 0;
+                }
+            }
+    
+            int run() override {
+                return current_job_.name;
+            }
+    };
