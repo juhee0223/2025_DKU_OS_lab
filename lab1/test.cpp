@@ -38,11 +38,11 @@ TEST_P(SchedulerTest, Stride) {
 INSTANTIATE_TEST_CASE_P(Default, SchedulerTest,
   ::testing::Values(
     // std::make_tuple("워크로드 파일", "context_switch 시간"),
-    std::make_tuple("A", 0.01)
-    // std::make_tuple("A", 0.1),
+    std::make_tuple("A", 0.01),
+    std::make_tuple("A", 0.1),
     
-    // std::make_tuple("B", 0.05),
-    // std::make_tuple("B", 0.2)
+    std::make_tuple("B", 0.05),
+    std::make_tuple("B", 0.2)
   )
 );
 
