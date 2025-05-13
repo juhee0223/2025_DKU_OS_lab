@@ -46,7 +46,7 @@ Implement concurrent data structure and compare their performance.
   - Deadline: **2025.05.20 23:59**
 - Class 3
   - [Google Form](https://forms.gle/m3TUns69gZUXk3RT7)
-  - Deadline: **2025.05.14 23:59**
+  - Deadline: **2025.05.21 23:59**
 
 ### Getting Start
 
