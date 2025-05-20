@@ -26,12 +26,12 @@ TEST_P(SchedulerTest, FeedBack_2i) {
   sched_ = new FeedBack(job_queue_, switch_time_, /*is_2i*/ true);
 }
 
-TEST_P(SchedulerTest, Lottery) {
-  sched_ = new Lottery(job_list_, switch_time_);
-}
-
 TEST_P(SchedulerTest, Stride) {
   sched_ = new Stride(job_list_, switch_time_);
+}
+
+TEST_P(SchedulerTest, Lottery) {
+  sched_ = new Lottery(job_list_, switch_time_);
 }
 
 // 각 8가지 TEST_P(스케줄링 기법)는 각각 4가지 경우(workload 2가지 x switch_time 2가지)를 TEST 함 

@@ -28,13 +28,26 @@ Lab0 contains information about installing a virtual machine and Ubuntu. Set the
 Implement scheduling techniques for CPU virtualization and compare their performance. 
 - [Lab1 Document](https://github.com/DKU-EmbeddedSystem-Lab/2025_DKU_OS/blob/main/%5BDKU_OS_LAB1%5D%20CPU%20Virtualization.pdf)
 - Class 1
-  - [Google Form](https://forms.gle/XGvaHxAuXT39XUkR6)
-  - Deadline: **2025.04.22 23:59**
+  - ~~[Google Form](https://forms.gle/XGvaHxAuXT39XUkR6)~~
+  - ~~Deadline: **2025.04.22 23:59**~~
 - Class 3
-  - [Google Form](https://forms.gle/HXSmrauZpNmPu1co7)
-  - Deadline: **2025.05.02 23:59**
+  - ~~[Google Form](https://forms.gle/HXSmrauZpNmPu1co7)~~
+  - ~~Deadline: **2025.05.02 23:59**~~
  
-2025/04/08 Issue - Makefile [link](https://github.com/DKU-EmbeddedSystem-Lab/2025_DKU_OS/issues/1)
+**02025/04/08 Issue** - Makefile [link](https://github.com/DKU-EmbeddedSystem-Lab/2025_DKU_OS/issues/1)
+
+**2025/04/19 Issue** - test.cpp [link](https://github.com/DKU-EmbeddedSystem-Lab/2025_DKU_OS/issues/2)
+
+## Lab2
+Implement concurrent data structure and compare their performance. 
+- [Lab2 Document](https://github.com/DKU-EmbeddedSystem-Lab/2025_DKU_OS/blob/main/%5BDKU_OS_LAB2%5D%20Concurrency.pdf)
+- Class 1
+  - [Google Form](https://forms.gle/ce1nCpRVUF8eDsjZA)
+  - Deadline: **2025.05.20 23:59**
+- Class 3
+  - [Google Form](https://forms.gle/m3TUns69gZUXk3RT7)
+  - Deadline: **2025.05.21 23:59**
+
 ### Getting Start
 
 ```
